@@ -1,0 +1,314 @@
+# 👟 JAPDV
+
+## Controle de Estoque e Vendas
+
+### Contexto
+
+A JAPDV é uma papelaria que precisa substituir seus controles em planilhas por um banco de dados para gerenciar fornecedores, produtos, estoque e vendas.
+
+O banco será utilizado posteriormente como base para o desenvolvimento de uma aplicação de PDV.
+
+Seu objetivo é construir o banco de dados e desenvolver as consultas solicitadas a partir dos requisitos apresentados.
+
+> **Os nomes das tabelas e colunas devem ser utilizados exatamente como especificados neste documento.**
+>
+> Os comandos SQL necessários para solucionar cada etapa ficam por sua conta.
+
+---
+
+# 1. Banco de dados
+
+Crie o banco de dados:
+
+**Banco:** `japdv`
+
+Utilize:
+
+* Charset: `UTF8`
+* Collation: `UTF8_GENERAL_CI`
+
+Depois, selecione o banco para execução dos próximos comandos.
+
+---
+
+# 2. Tabela `fornecedores`
+
+Crie a tabela `fornecedores` utilizando as seguintes colunas:
+
+| Coluna         | Tipo        | Regra                                 |
+| -------------- | ----------- | ------------------------------------- |
+| `idFornecedor` | INT         | Chave primária, incremento automático |
+| `nome`         | VARCHAR(50) | Obrigatório                           |
+| `fone`         | VARCHAR(20) | Obrigatório                           |
+| `email`        | VARCHAR(50) | Opcional                              |
+
+Cadastre:
+
+| nome    | fone         | email                                                   |
+| ------- | ------------ | ------------------------------------------------------- |
+| Kalunga | 1199999-1111 | [kalunga@kalunga.com.br](mailto:kalunga@kalunga.com.br) |
+| Tilibra | 1199999-2222 | [vendas@tilibra.com.br](mailto:vendas@tilibra.com.br)   |
+
+---
+
+# 3. Tabela `produtos`
+
+Crie a tabela `produtos` utilizando:
+
+| Coluna          | Tipo          | Regra                                     |
+| --------------- | ------------- | ----------------------------------------- |
+| `idProduto`     | INT           | Chave primária, incremento automático     |
+| `codigoBarras`  | VARCHAR(20)   | Não pode repetir                          |
+| `descricao`     | VARCHAR(100)  | Obrigatório                               |
+| `categoria`     | VARCHAR(50)   | Opcional                                  |
+| `precoCusto`    | DECIMAL(10,2) | Obrigatório                               |
+| `precoVenda`    | DECIMAL(10,2) | Obrigatório                               |
+| `quantidade`    | INT           | Obrigatório, padrão 0                     |
+| `estoqueMinimo` | INT           | Obrigatório, padrão 0                     |
+| `idFornecedor`  | INT           | Obrigatório, relacionado a `fornecedores` |
+
+Cadastre:
+
+| codigoBarras | descricao             | categoria | precoCusto | precoVenda | quantidade | estoqueMinimo | idFornecedor |
+| ------------ | --------------------- | --------- | ---------: | ---------: | ---------: | ------------: | -----------: |
+| 789100000001 | Caneta BIC Azul       | Canetas   |       1.50 |       3.00 |         50 |            10 |            1 |
+| 789100000002 | Caneta BIC Vermelha   | Canetas   |       1.60 |       3.20 |          8 |            10 |            1 |
+| 789100000003 | Caderno Universitário | Cadernos  |      18.00 |      29.90 |          0 |             5 |            2 |
+| 789100000004 | Régua 30 cm           | Réguas    |       5.00 |      10.00 |         15 |             5 |            1 |
+
+---
+
+# 4. Tabela `vendas`
+
+A tabela `vendas` deverá representar cada venda realizada.
+
+Utilize:
+
+| Coluna      | Tipo          | Regra                                 |
+| ----------- | ------------- | ------------------------------------- |
+| `idVenda`   | INT           | Chave primária, incremento automático |
+| `dataVenda` | DATETIME      | Data/hora automática                  |
+| `total`     | DECIMAL(10,2) | Obrigatório                           |
+
+---
+
+# 5. Tabela `itens_venda`
+
+Uma venda pode possuir vários produtos.
+
+Crie a tabela `itens_venda` utilizando:
+
+| Coluna          | Tipo          | Regra                                 |
+| --------------- | ------------- | ------------------------------------- |
+| `idItem`        | INT           | Chave primária, incremento automático |
+| `idVenda`       | INT           | Obrigatório, relacionado a `vendas`   |
+| `idProduto`     | INT           | Obrigatório, relacionado a `produtos` |
+| `quantidade`    | INT           | Obrigatório                           |
+| `precoUnitario` | DECIMAL(10,2) | Obrigatório                           |
+
+O relacionamento entre `idVenda` e `vendas` deverá permitir exclusão em cascata.
+
+O relacionamento entre `idProduto` e `produtos` não deverá utilizar exclusão em cascata.
+
+---
+
+# 6. Dados de vendas
+
+Cadastre as seguintes vendas.
+
+### Venda 1
+
+`total`: **16.00**
+
+| idProduto | quantidade | precoUnitario |
+| --------: | ---------: | ------------: |
+|         1 |          2 |          3.00 |
+|         4 |          1 |         10.00 |
+
+### Venda 2
+
+`total`: **16.00**
+
+| idProduto | quantidade | precoUnitario |
+| --------: | ---------: | ------------: |
+|         2 |          5 |          3.20 |
+
+### Venda 3
+
+`total`: **23.00**
+
+| idProduto | quantidade | precoUnitario |
+| --------: | ---------: | ------------: |
+|         4 |          2 |         10.00 |
+|         1 |          1 |          3.00 |
+
+Ao final, `itens_venda` deverá possuir **5 registros**.
+
+---
+
+# 7. Consultas
+
+Desenvolva as consultas abaixo utilizando as tabelas e colunas fornecidas.
+
+## Consulta 1
+
+Apresente os produtos juntamente com as informações de seus fornecedores.
+
+Exiba:
+
+* `idProduto`
+* `descricao`
+* `categoria`
+* `precoVenda`
+* `quantidade`
+* `estoqueMinimo`
+* `nome`
+
+Ordene pela `descricao`.
+
+---
+
+## Consulta 2
+
+Identifique os produtos que precisam de reposição.
+
+Considere produtos cuja `quantidade` esteja no limite ou abaixo de `estoqueMinimo`.
+
+Exiba:
+
+* `idProduto`
+* `codigoBarras`
+* `descricao`
+* `categoria`
+* `quantidade`
+* `estoqueMinimo`
+* `nome` do fornecedor
+* quantidade necessária para atingir o `estoqueMinimo`
+
+Organize o resultado pelo estoque atual e depois pela descrição.
+
+---
+
+## Consulta 3
+
+Apresente o detalhamento de uma venda específica.
+
+Exiba:
+
+* `idVenda`
+* `dataVenda`
+* `descricao`
+* `quantidade`
+* `precoUnitario`
+* subtotal do item
+
+Utilize inicialmente a venda de número `1`.
+
+Depois teste com as vendas `2` e `3`.
+
+A `dataVenda` deverá ser apresentada no formato:
+
+**dd/mm/aaaa hh:mm**
+
+---
+
+# 8. Indicadores do PDV
+
+Crie uma consulta para cada indicador.
+
+### 8.1
+
+Quantidade total de registros existentes em `produtos`.
+
+### 8.2
+
+Quantidade de produtos cujo estoque está abaixo ou igual ao estoque mínimo, mas ainda possui unidades disponíveis.
+
+### 8.3
+
+Quantidade de produtos cuja `quantidade` é igual a zero.
+
+### 8.4
+
+Quantidade de vendas realizadas na data atual.
+
+### 8.5
+
+Quantidade total de unidades vendidas na data atual.
+
+### 8.6
+
+Faturamento total das vendas realizadas na data atual.
+
+Caso não existam vendas na data atual, o resultado do faturamento deverá ser `0`.
+
+---
+
+# 9. Últimas vendas
+
+Apresente as últimas vendas cadastradas.
+
+Exiba:
+
+* `idVenda`
+* `dataVenda`
+* `total`
+
+Apresente no máximo **10 registros**, começando pela venda mais recente.
+
+Formate a `dataVenda` como:
+
+**dd/mm/aaaa hh:mm**
+
+---
+
+# 🔥 DESAFIO EXTRA
+
+Agora resolva sem receber a indicação de quais funções ou cláusulas utilizar.
+
+### Desafio 1
+
+Identifique o produto com maior quantidade em estoque.
+
+### Desafio 2
+
+Identifique o produto que possui a maior diferença entre `precoVenda` e `precoCusto`.
+
+### Desafio 3
+
+Apresente cada produto e a quantidade total vendida.
+
+Produtos que ainda não foram vendidos também devem ser considerados.
+
+### Desafio 4
+
+Identifique o produto que possui a maior quantidade total vendida.
+
+### Desafio 5
+
+Calcule o valor de cada venda a partir dos registros de `itens_venda`.
+
+Não utilize diretamente o campo `total` de `vendas`.
+
+Compare posteriormente o resultado calculado com o valor armazenado em `vendas.total`.
+
+---
+
+# 📦 Entrega
+
+Entregue um único arquivo:
+
+`japdv.sql`
+
+O arquivo deverá conter:
+
+* criação do banco;
+* criação das tabelas;
+* relacionamentos;
+* inserção dos dados;
+* consultas;
+* desafios extras.
+
+Organize o arquivo de maneira que seja possível acompanhar a sequência de desenvolvimento.
+
+
